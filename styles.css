@@ -23,6 +23,17 @@ button {
     cursor: pointer;
 }
 
+main {
+    margin: 20px;
+}
+
+.btn {
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-weight: 600;
+}
+
 .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -54,6 +65,12 @@ button {
 
 .modal-container {
     position: relative;
+    /* 
+    * Responsive width: 
+    * - Trên màn hình lớn: giới hạn tối đa 600px
+    * - Trên màn hình nhỏ: co lại theo 90% container
+    * - Luôn chọn giá trị nhỏ hơn giữa 2 giá trị này
+    */
     width: min(600px, 90%);
     background: #fff;
     padding: 28px;
