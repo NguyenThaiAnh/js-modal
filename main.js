@@ -1,46 +1,68 @@
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
-const buttonsOpen = $$("button[data-modal]");
-const buttonsClose = $$(".modal-close");
-const backdrops = $$(".modal-backdrop");
-let currentModal = null;
+function Modal() {
+    this.open = function (children) {
+        // Create modal elements
+        const modalBackdrop = document.createElement("div");
+        modalBackdrop.className = "modal-backdrop";
 
-buttonsOpen.forEach(button => {
-    button.addEventListener("click", function () {
-        const modal = $(this.dataset.modal);
-        if (modal) {
-            currentModal = modal;
-            modal.classList.add("show");
+        const modalContainer = document.createElement("div");
+        modalContainer.className = "modal-container";
+
+        const btnClose = document.createElement("button");
+        btnClose.className = "modal-close";
+        btnClose.innerHTML = "&times;";
+
+        const modalContent = document.createElement("div");
+        modalContent.className = "modal-content";
+        modalContent.innerHTML = children;
+
+        // Append elements to the modal
+        modalContent.innerHTML = children;
+        modalContainer.append(btnClose, modalContent);
+        modalBackdrop.append(modalContainer);
+        document.body.append(modalBackdrop);
+
+        setTimeout(() => {
+            modalBackdrop.classList.add("show");
+        }, 0);
+
+        btnClose.onclick = () => this.closeModal(modalBackdrop);
+        modalBackdrop.onclick = (e) => {
+            if (e.target === modalBackdrop) {
+                this.closeModal(modalBackdrop);
+            }
         }
-        else console.error(`${this.dataset.modal} not found`);
-    });
-});
 
-buttonsClose.forEach(button => {
-    button.addEventListener("click", function () {
-        const modal = this.closest(".modal-backdrop");
-        if (modal) {
-            currentModal = null;
-            modal.classList.remove("show");
-        }
-    });
-});
-
-backdrops.forEach(backdrop => {
-    backdrop.addEventListener("click", function (e) {
-        if (e.target === this) {
-            currentModal = null;
-            this.classList.remove("show");
-        }
-    });
-});
-
-document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") {
-        if (currentModal) {
-            currentModal.classList.remove("show");
-            currentModal = null;
+        document.onkeydown = (e) => {
+            if (e.key === "Escape") {
+                this.closeModal(modalBackdrop);
+            }
         }
     }
-});
+
+    this.closeModal = (modalElement) => {
+        modalElement.classList.remove("show");
+
+        // Using transitionend event to wait for the animation in css to finish
+        // https://www.w3schools.com/jsref/event_transitionend.asp
+        modalElement.ontransitionend = () => {
+            modalElement.remove();
+        };
+    }
+}
+
+const modal = new Modal();
+
+$("#open-modal-1").onclick = () => {
+    modal.open('<h1>Modal 1</h1>');
+}
+
+$("#open-modal-2").onclick = () => {
+    modal.open('<h1>Modal 2</h1>');
+}
+
+$("#open-modal-3").onclick = () => {
+    modal.open('<h1>Modal 3</h1>');
+}
