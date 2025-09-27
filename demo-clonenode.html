@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloneNode Demo</title>
+    <style>
+        .container {
+            margin: 20px;
+        }
+
+        .demo-box {
+            border: 2px solid #ccc;
+            padding: 20px;
+            margin: 10px 0;
+            background: #f9f9f9;
+        }
+
+        .target {
+            background: #e8f4fd;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .warning {
+            color: red;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Demo: Tại sao cần cloneNode(true)?</h1>
+
+        <!-- Template gốc -->
+        <template id="my-template">
+            <div>
+                <h3>🎉 Nội dung từ template</h3>
+                <p>Đây là nội dung được lấy từ template element</p>
+                <button onclick="alert('Button từ template!')">Click me!</button>
+            </div>
+        </template>
+
+        <div class="demo-box">
+            <h2>Template gốc (ẩn trong DOM):</h2>
+            <p>Template có id="my-template" chứa nội dung ở trên ⬆️</p>
+        </div>
+
+        <!-- Demo WITHOUT cloneNode -->
+        <div class="demo-box">
+            <h2>❌ KHÔNG dùng cloneNode(true):</h2>
+            <button onclick="moveWithoutClone()">Lần 1: Move content</button>
+            <button onclick="moveWithoutClone()">Lần 2: Move content</button>
+            <button onclick="resetTemplate()">Reset Template</button>
+            <div id="target-1" class="target demo-box">
+                <p><em>Nội dung sẽ xuất hiện ở đây...</em></p>
+            </div>
+            <div id="status-1" class="warning"></div>
+        </div>
+
+        <!-- Demo WITH cloneNode -->
+        <div class="demo-box">
+            <h2>✅ CÓ dùng cloneNode(true):</h2>
+            <button onclick="cloneAndMove()">Lần 1: Clone & move</button>
+            <button onclick="cloneAndMove()">Lần 2: Clone & move</button>
+            <button onclick="clearTarget2()">Clear target</button>
+            <div id="target-2" class="target demo-box">
+                <p><em>Nội dung sẽ xuất hiện ở đây...</em></p>
+            </div>
+            <div id="status-2" class="success"></div>
+        </div>
+
+        <!-- Template status -->
+        <div class="demo-box">
+            <h2>📊 Trạng thái Template:</h2>
+            <button onclick="checkTemplate()">Check template content</button>
+            <div id="template-status"></div>
+        </div>
+    </div>
+
+    <script>
+        const template = document.querySelector('#my-template');
+        const target1 = document.querySelector('#target-1');
+        const target2 = document.querySelector('#target-2');
+        const status1 = document.querySelector('#status-1');
+        const status2 = document.querySelector('#status-2');
+        const templateStatus = document.querySelector('#template-status');
+
+        let moveCount = 0;
+        let cloneCount = 0;
+
+        // WITHOUT cloneNode - chỉ move
+        function moveWithoutClone() {
+            moveCount++;
+
+            // Clear previous content
+            target1.innerHTML = '';
+
+            // Move content (NOT clone)
+            const content = template.content;
+
+            if (content.children.length === 0) {
+                status1.innerHTML = `❌ Lần ${moveCount}: Template đã RỖNG! Không có gì để move.`;
+                target1.innerHTML = '<p class="warning">RỖNG - Template đã bị move hết!</p>';
+            } else {
+                target1.appendChild(content);
+                status1.innerHTML = `✅ Lần ${moveCount}: Move thành công, nhưng template giờ đã RỖNG!`;
+            }
+        }
+
+        // WITH cloneNode - tạo copy
+        function cloneAndMove() {
+            cloneCount++;
+
+            // Clear previous content  
+            target2.innerHTML = '';
+
+            // Clone content (tạo bản copy)
+            const content = template.content.cloneNode(true);
+            target2.appendChild(content);
+
+            status2.innerHTML = `✅ Lần ${cloneCount}: Clone thành công! Template vẫn còn nguyên.`;
+        }
+
+        function resetTemplate() {
+            // Tạo lại nội dung template
+            template.innerHTML = `
+                <div>
+                    <h3>🎉 Nội dung từ template</h3>
+                    <p>Đây là nội dung được lấy từ template element</p>
+                    <button onclick="alert('Button từ template!')">Click me!</button>
+                </div>
+            `;
+            status1.innerHTML = '🔄 Template đã được reset!';
+            moveCount = 0;
+        }
+
+        function clearTarget2() {
+            target2.innerHTML = '<p><em>Nội dung sẽ xuất hiện ở đây...</em></p>';
+            status2.innerHTML = '';
+            cloneCount = 0;
+        }
+
+        function checkTemplate() {
+            const hasContent = template.content.children.length > 0;
+            templateStatus.innerHTML = hasContent
+                ? '✅ Template có nội dung: ' + template.content.children.length + ' element(s)'
+                : '❌ Template RỖNG (đã bị move hết)';
+        }
+
+        // Initial check
+        checkTemplate();
+    </script>
+</body>
+
+</html>

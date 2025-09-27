@@ -11,6 +11,23 @@ function Modal() {
             return;
         };
 
+        /**
+         * Tại sao cần cloneNode(true)?
+         * 
+         * KHÔNG có cloneNode(true):
+         * - template.content được MOVE (không phải copy) vào modal
+         * - Lần 1: template.content → modal (hiển thị OK)
+         * - Đóng modal: template.content bị XÓA cùng modal
+         * - Lần 2: template.content đã RỖNG → modal trống
+         * 
+         * CÓ cloneNode(true):
+         * - Tạo bản COPY của template.content
+         * - Lần 1: copy → modal (template gốc vẫn còn)
+         * - Đóng modal: chỉ xóa bản copy
+         * - Lần 2: tạo copy mới → modal hiển thị bình thường
+         * 
+         * cloneNode(true) = deep clone (copy cả children elements)
+         */
         const content = template.content.cloneNode(true);
 
         // Create modal elements
