@@ -3,6 +3,9 @@ const $$ = document.querySelectorAll.bind(document);
 
 function Modal() {
     function getScrollbarWidth() {
+        if (getScrollbarWidth.value)
+            return getScrollbarWidth.value;
+
         const div = document.createElement("div");
         Object.assign(div.style, {
             overflow: "scroll",
@@ -14,6 +17,7 @@ function Modal() {
         const scrollbarWidth = div.offsetWidth - div.clientWidth;
         document.body.removeChild(div);
 
+        getScrollbarWidth.value = scrollbarWidth;
         return scrollbarWidth;
     }
 
@@ -68,6 +72,8 @@ function Modal() {
         setTimeout(() => {
             modalBackdrop.classList.add("show");
         }, 0);
+
+        console.log(getScrollbarWidth());
 
         // Disable scrolling
         document.body.classList.add("no-scroll");
