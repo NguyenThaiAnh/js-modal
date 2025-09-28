@@ -2,6 +2,21 @@ const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
 function Modal() {
+    function getScrollbarWidth() {
+        const div = document.createElement("div");
+        Object.assign(div.style, {
+            overflow: "scroll",
+            position: "absolute",
+            top: "-9999px",
+        });
+
+        document.body.appendChild(div);
+        const scrollbarWidth = div.offsetWidth - div.clientWidth;
+        document.body.removeChild(div);
+
+        return scrollbarWidth;
+    }
+
     this.open = function (options = {}) {
         const { templateId, allowBackdropClose = true } = options;
         const template = $(`#${templateId}`);
@@ -56,6 +71,7 @@ function Modal() {
 
         // Disable scrolling
         document.body.classList.add("no-scroll");
+        document.body.style.paddingRight = `${getScrollbarWidth()}px`;
 
         btnClose.onclick = () => this.closeModal(modalBackdrop);
         if (allowBackdropClose) {
@@ -78,6 +94,7 @@ function Modal() {
         modalElement.classList.remove("show");
         // Enable scrolling
         document.body.classList.remove("no-scroll");
+        document.body.style.paddingRight = "";
 
         // Using transitionend event to wait for the animation in css to finish
         // https://www.w3schools.com/jsref/event_transitionend.asp
