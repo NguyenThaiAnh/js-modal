@@ -3,7 +3,7 @@ const $$ = document.querySelectorAll.bind(document);
 
 function Modal() {
     this.open = function (options = {}) {
-        const { templateId } = options;
+        const { templateId, allowBackdropClose = true } = options;
         const template = $(`#${templateId}`);
 
         if (!template) {
@@ -54,10 +54,15 @@ function Modal() {
             modalBackdrop.classList.add("show");
         }, 0);
 
+        // Disable scrolling
+        document.body.classList.add("no-scroll");
+
         btnClose.onclick = () => this.closeModal(modalBackdrop);
-        modalBackdrop.onclick = (e) => {
-            if (e.target === modalBackdrop) {
-                this.closeModal(modalBackdrop);
+        if (allowBackdropClose) {
+            modalBackdrop.onclick = (e) => {
+                if (e.target === modalBackdrop) {
+                    this.closeModal(modalBackdrop);
+                }
             }
         }
 
@@ -66,10 +71,13 @@ function Modal() {
                 this.closeModal(modalBackdrop);
             }
         }
+        return modalBackdrop;
     }
 
     this.closeModal = (modalElement) => {
         modalElement.classList.remove("show");
+        // Enable scrolling
+        document.body.classList.remove("no-scroll");
 
         // Using transitionend event to wait for the animation in css to finish
         // https://www.w3schools.com/jsref/event_transitionend.asp
@@ -82,13 +90,28 @@ function Modal() {
 const modal = new Modal();
 
 $("#open-modal-1").onclick = () => {
-    modal.open({
+    const modalElement = modal.open({
         templateId: "modal-1",
+        allowBackdropClose: true,
     });
+    const img = modalElement.querySelector("img");
+    console.dir(img);
 }
 
 $("#open-modal-2").onclick = () => {
-    modal.open({
+    const modalElement = modal.open({
         templateId: "modal-2",
+        allowBackdropClose: false,
     });
+
+    const form = modalElement.querySelector("#login-form");
+
+    form.onsubmit = (e) => {
+        e.preventDefault();
+        const formData = {
+            email: $("#email").value,
+            password: $("#password").value,
+        }
+        console.log(formData);
+    }
 }
