@@ -1,6 +1,8 @@
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
+Modal.elements = [];
+
 function Modal(options = {}) {
     const {
         templateId,
@@ -128,6 +130,8 @@ function Modal(options = {}) {
     };
 
     this.open = function () {
+        Modal.elements.push(this);
+
         if (!this._backdrop) {
             this._build();
         }
@@ -150,11 +154,7 @@ function Modal(options = {}) {
         }
 
         if (this._allowEscapeClose) {
-            document.onkeydown = (e) => {
-                if (e.key === "Escape") {
-                    this.close();
-                }
-            }
+            document.addEventListener("keydown", this._handleEscapeKey);
         }
 
         this._onTransitionEnd(() => {
@@ -164,6 +164,13 @@ function Modal(options = {}) {
         return this._backdrop;
     }
 
+    this._handleEscapeKey = (e) => {
+        const lastModal = Modal.elements[Modal.elements.length - 1];
+        if (e.key === "Escape" && this === lastModal) {
+            this.close();
+        }
+    };
+
     this._onTransitionEnd = (callback) => {
         this._backdrop.ontransitionend = (e) => {
             if (e.propertyName !== "transform") return;
@@ -172,7 +179,13 @@ function Modal(options = {}) {
     }
 
     this.close = (destroy = destroyOnClose) => {
+        Modal.elements.pop();
+
         this._backdrop.classList.remove("show");
+
+        if (this._allowEscapeClose) {
+            document.removeEventListener("keydown", this._handleEscapeKey);
+        }
 
         // Using transitionend event to wait for the animation in css to finish
         // https://www.w3schools.com/jsref/event_transitionend.asp
@@ -184,8 +197,10 @@ function Modal(options = {}) {
             };
 
             // Enable scrolling
-            document.body.classList.remove("no-scroll");
-            document.body.style.paddingRight = "";
+            if (Modal.elements.length === 0) {
+                document.body.classList.remove("no-scroll");
+                document.body.style.paddingRight = "";
+            }
 
             if (typeof onClose === "function") onClose();
         });
@@ -244,7 +259,7 @@ $("#open-modal-2").onclick = () => {
 
 const modal3 = new Modal({
     templateId: "modal-3",
-    closeMethods: [],
+    closeMethods: ["escape"],
     footer: true,
     onOpen: () => {
         console.log("Modal 3 opened");
@@ -268,4 +283,6 @@ modal3.addFooterButton("<span>Agree</span>", "modal-btn primary", (e) => {
     modal3.close();
 });
 
-modal3.open();
+$("#open-modal-3").onclick = () => {
+    modal3.open();
+};
