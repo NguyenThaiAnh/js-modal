@@ -6,6 +6,7 @@ function Modal(options = {}) {
         templateId,
         destroyOnClose = true,
         cssClass = [],
+        footer = false,
         closeMethods = ["button", "overlay", "escape"],
         onOpen,
         onClose,
@@ -89,8 +90,27 @@ function Modal(options = {}) {
         // Append elements to the modal
         modalContent.append(content);
         container.append(modalContent);
+
+        if (footer) {
+            this._modalFooter = document.createElement("div");
+            this._modalFooter.className = "modal-footer";
+
+            if (this._footerContent) {
+                this._modalFooter.innerHTML = this._footerContent;
+            }
+
+            container.append(this._modalFooter);
+        }
+
         this._backdrop.append(container);
         document.body.append(this._backdrop);
+    }
+
+    this.setFooterContent = (content) => {
+        this._footerContent = content;
+        if (this._modalFooter) {
+            this._modalFooter.innerHTML = this._footerContent;
+        }
     }
 
     this.open = function () {
@@ -123,12 +143,18 @@ function Modal(options = {}) {
             }
         }
 
-        this._backdrop.ontransitionend = (e) => {
-            if (e.propertyName !== "transform") return;
+        this._onTransitionEnd(() => {
             if (typeof onOpen === "function") onOpen();
-        }
+        });
 
         return this._backdrop;
+    }
+
+    this._onTransitionEnd = (callback) => {
+        this._backdrop.ontransitionend = (e) => {
+            if (e.propertyName !== "transform") return;
+            if (typeof callback === "function") callback();
+        }
     }
 
     this.close = (destroy = destroyOnClose) => {
@@ -136,12 +162,11 @@ function Modal(options = {}) {
 
         // Using transitionend event to wait for the animation in css to finish
         // https://www.w3schools.com/jsref/event_transitionend.asp
-        this._backdrop.ontransitionend = () => {
-            if (e.propertyName !== "transform") return;
-
+        this._onTransitionEnd(() => {
             if (this._backdrop && destroy) {
                 this._backdrop.remove();
                 this._backdrop = null;
+                this._modalFooter = null;
             };
 
             // Enable scrolling
@@ -149,7 +174,7 @@ function Modal(options = {}) {
             document.body.style.paddingRight = "";
 
             if (typeof onClose === "function") onClose();
-        }
+        });
     }
 
     this.destroy = () => {
@@ -202,3 +227,18 @@ $("#open-modal-2").onclick = () => {
         console.log(formData);
     }
 }
+
+const modal3 = new Modal({
+    templateId: "modal-3",
+    footer: true,
+    onOpen: () => {
+        console.log("Modal 3 opened");
+    },
+    onClose: () => {
+        console.log("Modal 3 closed");
+    },
+});
+
+modal3.setFooterContent("<h2>Footer content</h2>");
+
+modal3.open();

@@ -83,7 +83,7 @@ article img {
     */
     width: min(600px, 90%);
     background: #fff;
-    padding: 28px;
+    padding: 20px 20px 0;
     border-radius: 10px;
     transform: scale(0);
     transition: transform 0.3s;
@@ -108,6 +108,10 @@ article img {
 .modal-content {
     max-height: 80vh;
     overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 20px 0;
 }
 
 .no-scroll {
