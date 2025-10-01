@@ -4,218 +4,247 @@ const $$ = document.querySelectorAll.bind(document);
 Modal.elements = [];
 
 function Modal(options = {}) {
-    const {
-        templateId,
-        destroyOnClose = true,
-        cssClass = [],
-        footer = false,
-        closeMethods = ["button", "overlay", "escape"],
-        onOpen,
-        onClose,
-    } = options;
+    // const {
+    //     templateId,
+    //     destroyOnClose = true,
+    //     cssClass = [],
+    //     footer = false,
+    //     closeMethods = ["button", "overlay", "escape"],
+    //     onOpen,
+    //     onClose,
+    // } = options;
 
-    const template = $(`#${templateId}`);
+    this.opt = Object.assign({
+        // templateId,
+        destroyOnClose: true,
+        cssClass: [],
+        footer: false,
+        closeMethods: ["button", "overlay", "escape"],
+        // onOpen,
+        // onClose,
+    }, options);
 
-    if (!template) {
-        console.error(`Template with id ${templateId} not found`);
+    this.template = $(`#${this.opt.templateId}`);
+    this._handleEscapeKey = this._handleEscapeKey.bind(this);
+
+    if (!this.template) {
+        console.error(`Template with id ${this.opt.templateId} not found`);
         return;
     };
 
+    const { closeMethods } = this.opt;
     this._allowButtonClose = closeMethods.includes("button");
     this._allowOverlayClose = closeMethods.includes("overlay");
     this._allowEscapeClose = closeMethods.includes("escape");
-
-    this._getScrollbarWidth = () => {
-        if (this._scrollbarWidth)
-            return this._scrollbarWidth;
-
-        const div = document.createElement("div");
-        Object.assign(div.style, {
-            overflow: "scroll",
-            position: "absolute",
-            top: "-9999px",
-        });
-
-        document.body.appendChild(div);
-        this._scrollbarWidth = div.offsetWidth - div.clientWidth;
-        document.body.removeChild(div);
-        return this._scrollbarWidth;
-    }
-
-    this._build = function () {
-        /**
-         * Tại sao cần cloneNode(true)?
-         * 
-         * KHÔNG có cloneNode(true):
-         * - template.content được MOVE (không phải copy) vào modal
-         * - Lần 1: template.content → modal (hiển thị OK)
-         * - Đóng modal: template.content bị XÓA cùng modal
-         * - Lần 2: template.content đã RỖNG → modal trống
-         * 
-         * CÓ cloneNode(true):
-         * - Tạo bản COPY của template.content
-         * - Lần 1: copy → modal (template gốc vẫn còn)
-         * - Đóng modal: chỉ xóa bản copy
-         * - Lần 2: tạo copy mới → modal hiển thị bình thường
-         * 
-         * cloneNode(true) = deep clone (copy cả children elements)
-         */
-        const content = template.content.cloneNode(true);
-
-        // Create modal elements
-        this._backdrop = document.createElement("div");
-        this._backdrop.className = "modal-backdrop";
-
-        const container = document.createElement("div");
-        container.className = "modal-container";
-
-        cssClass.forEach(className => {
-            if (typeof className === "string") {
-                container.classList.add(className);
-            }
-        });
-
-        if (this._allowButtonClose) {
-            const closeBtn = this._createButton("&times;", "modal-close", this.close);
-            container.append(closeBtn);
-        }
-
-        const modalContent = document.createElement("div");
-        modalContent.className = "modal-content";
-
-        // Append elements to the modal
-        modalContent.append(content);
-        container.append(modalContent);
-
-        if (footer) {
-            this._modalFooter = document.createElement("div");
-            this._modalFooter.className = "modal-footer";
-
-            this._renderFooterContent();
-            this._renderFooterButtons();
-
-            container.append(this._modalFooter);
-        }
-
-        this._backdrop.append(container);
-        document.body.append(this._backdrop);
-    }
-
-    this.setFooterContent = (html) => {
-        this._footerContent = html;
-        this._renderFooterContent();
-    };
-
     this._footerButtons = [];
 
-    this.addFooterButton = (title, cssClass, callback) => {
-        const button = this._createButton(title, cssClass, callback);
-        this._footerButtons.push(button);
-        this._renderFooterButtons();
-    };
 
-    this._renderFooterContent = () => {
-        if (this._modalFooter && this._footerContent) {
-            this._modalFooter.innerHTML = this._footerContent;
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+// Prototype
+Modal.prototype._getScrollbarWidth = () => {
+    if (this._scrollbarWidth)
+        return this._scrollbarWidth;
+
+    const div = document.createElement("div");
+    Object.assign(div.style, {
+        overflow: "scroll",
+        position: "absolute",
+        top: "-9999px",
+    });
+
+    document.body.appendChild(div);
+    this._scrollbarWidth = div.offsetWidth - div.clientWidth;
+    document.body.removeChild(div);
+    return this._scrollbarWidth;
+}
+
+Modal.prototype._build = function () {
+    /**
+     * Tại sao cần cloneNode(true)?
+     * 
+     * KHÔNG có cloneNode(true):
+     * - template.content được MOVE (không phải copy) vào modal
+     * - Lần 1: template.content → modal (hiển thị OK)
+     * - Đóng modal: template.content bị XÓA cùng modal
+     * - Lần 2: template.content đã RỖNG → modal trống
+     * 
+     * CÓ cloneNode(true):
+     * - Tạo bản COPY của template.content
+     * - Lần 1: copy → modal (template gốc vẫn còn)
+     * - Đóng modal: chỉ xóa bản copy
+     * - Lần 2: tạo copy mới → modal hiển thị bình thường
+     * 
+     * cloneNode(true) = deep clone (copy cả children elements)
+     */
+    const content = this.template.content.cloneNode(true);
+
+    // Create modal elements
+    this._backdrop = document.createElement("div");
+    this._backdrop.className = "modal-backdrop";
+
+    const container = document.createElement("div");
+    container.className = "modal-container";
+
+    this.opt.cssClass.forEach(className => {
+        if (typeof className === "string") {
+            container.classList.add(className);
         }
-    };
+    });
 
-    this._renderFooterButtons = () => {
-        if (this._modalFooter) {
-            this._footerButtons.forEach((button) => {
-                this._modalFooter.append(button);
-            });
-        }
-    };
-
-    this._createButton = (title, cssClass, callback) => {
-        const button = document.createElement("button");
-        button.className = cssClass;
-        button.innerHTML = title;
-        button.onclick = callback;
-
-        return button;
-    };
-
-    this.open = function () {
-        Modal.elements.push(this);
-
-        if (!this._backdrop) {
-            this._build();
-        }
-
-        setTimeout(() => {
-            this._backdrop.classList.add("show");
-        }, 0);
-
-        // Disable scrolling
-        document.body.classList.add("no-scroll");
-        document.body.style.paddingRight = `${this._scrollbarWidth}px`;
-
-        // Attach event listeners
-        if (this._allowOverlayClose) {
-            this._backdrop.onclick = (e) => {
-                if (e.target === this._backdrop) {
-                    this.close();
-                }
-            }
-        }
-
-        if (this._allowEscapeClose) {
-            document.addEventListener("keydown", this._handleEscapeKey);
-        }
-
-        this._onTransitionEnd(onOpen);
-
-        return this._backdrop;
+    if (this._allowButtonClose) {
+        const closeBtn = this._createButton("&times;", "modal-close", () => this.close());
+        container.append(closeBtn);
     }
 
-    this._handleEscapeKey = (e) => {
-        const lastModal = Modal.elements[Modal.elements.length - 1];
-        if (e.key === "Escape" && this === lastModal) {
-            this.close();
-        }
-    };
+    const modalContent = document.createElement("div");
+    modalContent.className = "modal-content";
 
-    this._onTransitionEnd = (callback) => {
-        this._backdrop.ontransitionend = (e) => {
-            if (e.propertyName !== "transform") return;
-            if (typeof callback === "function") callback();
-        };
-    };
+    // Append elements to the modal
+    modalContent.append(content);
+    container.append(modalContent);
 
-    this.close = (destroy = destroyOnClose) => {
-        Modal.elements.pop();
+    if (this.opt.footer) {
+        this._modalFooter = document.createElement("div");
+        this._modalFooter.className = "modal-footer";
 
-        this._backdrop.classList.remove("show");
+        this._renderFooterContent();
+        this._renderFooterButtons();
 
-        if (this._allowEscapeClose) {
-            document.removeEventListener("keydown", this._handleEscapeKey);
-        }
+        container.append(this._modalFooter);
+    }
 
-        // Using transitionend event to wait for the animation in css to finish
-        // https://www.w3schools.com/jsref/event_transitionend.asp
-        this._onTransitionEnd(() => {
-            if (this._backdrop && destroy) {
-                this._backdrop.remove();
-                this._backdrop = null;
-                this._modalFooter = null;
-            };
+    this._backdrop.append(container);
+    document.body.append(this._backdrop);
+}
 
-            // Enable scrolling
-            if (Modal.elements.length === 0) {
-                document.body.classList.remove("no-scroll");
-                document.body.style.paddingRight = "";
-            }
+Modal.prototype.setFooterContent = function (html) {
+    this._footerContent = html;
+    this._renderFooterContent();
+};
 
-            if (typeof onClose === "function") onClose();
+Modal.prototype.addFooterButton = function (title, cssClass, callback) {
+    const button = this._createButton(title, cssClass, callback);
+    this._footerButtons.push(button);
+    this._renderFooterButtons();
+};
+
+Modal.prototype._renderFooterContent = function () {
+    if (this._modalFooter && this._footerContent) {
+        this._modalFooter.innerHTML = this._footerContent;
+    }
+};
+
+Modal.prototype._renderFooterButtons = function () {
+    if (this._modalFooter) {
+        this._footerButtons.forEach((button) => {
+            this._modalFooter.append(button);
         });
     }
+};
 
-    this.destroy = () => {
-        this.close(true);
+Modal.prototype._createButton = function (title, cssClass, callback) {
+    const button = document.createElement("button");
+    button.className = cssClass;
+    button.innerHTML = title;
+    button.onclick = callback;
+
+    return button;
+};
+
+Modal.prototype.open = function () {
+    Modal.elements.push(this);
+
+    if (!this._backdrop) {
+        this._build();
     }
+
+    setTimeout(() => {
+        this._backdrop.classList.add("show");
+    }, 0);
+
+    // Disable scrolling
+    document.body.classList.add("no-scroll");
+    document.body.style.paddingRight = `${this._scrollbarWidth}px`;
+
+    // Attach event listeners
+    if (this._allowOverlayClose) {
+        this._backdrop.onclick = (e) => {
+            if (e.target === this._backdrop) {
+                this.close();
+            }
+        }
+    }
+
+    if (this._allowEscapeClose) {
+        document.addEventListener("keydown", this._handleEscapeKey);
+    }
+
+    this._onTransitionEnd(this.opt.onOpen);
+
+    return this._backdrop;
 }
+
+Modal.prototype._handleEscapeKey = function (e) {
+    console.log(this);
+    const lastModal = Modal.elements[Modal.elements.length - 1];
+    if (e.key === "Escape" && this === lastModal) {
+        this.close();
+    }
+};
+
+Modal.prototype._onTransitionEnd = function (callback) {
+    this._backdrop.ontransitionend = (e) => {
+        if (e.propertyName !== "transform") return;
+        if (typeof callback === "function") callback();
+    };
+};
+
+Modal.prototype.close = function (destroy = this.opt.destroyOnClose) {
+    Modal.elements.pop();
+
+    this._backdrop.classList.remove("show");
+
+    if (this._allowEscapeClose) {
+        document.removeEventListener("keydown", this._handleEscapeKey);
+    }
+
+    // Using transitionend event to wait for the animation in css to finish
+    // https://www.w3schools.com/jsref/event_transitionend.asp
+    this._onTransitionEnd(() => {
+        if (this._backdrop && destroy) {
+            this._backdrop.remove();
+            this._backdrop = null;
+            this._modalFooter = null;
+        };
+
+        // Enable scrolling
+        if (Modal.elements.length === 0) {
+            document.body.classList.remove("no-scroll");
+            document.body.style.paddingRight = "";
+        }
+
+        if (typeof onClose === "function") this.opt.onClose();
+    });
+}
+
+Modal.prototype.destroy = function () {
+    this.close(true);
+}
+
+// Test
 
 const modal1 = new Modal({
     templateId: "modal-1",
